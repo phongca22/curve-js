@@ -1,124 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Load the Paper.js library -->
-    <script type="text/javascript" src="js/paper-full.min.js"></script>
-    <!-- Define inlined PaperScript associate it with myCanvas -->
-    <script type="text/javascript">
-    // var y = view.size.height / 2;
-    // var width = view.size.width;
-    // var vector = new Point({
-    //     angle: 0,
-    //     length: width / 5
-    // });
-    // var offset = width / 30;
-    // var handleTexts = [];
-    // var path = new Path({
-    //     segments: [
-    //         [[offset, y], null, vector.rotate(-90)],
-    //         [[width / 2, y], vector.rotate(-180), vector],
-    //         [[width - offset, y], vector.rotate(90), null]
-    //     ],
-    //     fullySelected: true
-    // });
-    //
-    // function onMouseMove(event) {
-    //     var point = event.point.clone();
-    //     // Constrain the event point, to not cut off the text:
-    //     if (point.y < 22)
-    //     point.y = 22;
-    //     if (point.y > view.size.height - 24)
-    //     point.y = view.size.height - 24;
-    //     var delta = point - view.center;
-    //     for (var i = 0; i < 2; i++) {
-    //         var curve = path.curves[i];
-    //         curve.handle1.y = curve.handle2.y = delta.y * (i % 2 ? 1 : -1);
-    //         var firstPoint = curve.point1 + curve.handle1;
-    //         var secondPoint = curve.point2 + curve.handle2;
-    //         handleTexts[i * 2].point = secondPoint - (firstPoint.y < y ? [0, 10] : [0, -18]);
-    //         handleTexts[i * 2 + 1].point = firstPoint - (firstPoint.y < y ? [0, 10] : [0, -18]);
-    //     }
-    //     return false; // Prevent touch scrolling
-    // }
-    //
-    // project.currentStyle.fillColor = 'black';
-    // for (var i = 0; i < 3; i++) {
-    //     var segment = path.segments[i];
-    //     var text = new PointText({
-    //         point: segment.point - [0, 10],
-    //         content: i,
-    //         fontSize: 12,
-    //         justification: 'center'
-    //     });
-    // }
-    //
-    // for (var i = 0; i < 2; i++) {
-    //     var handleInText = new PointText({
-    //         content: 'handleIn',
-    //         fontSize: 12,
-    //         justification: 'center'
-    //     });
-    //     handleTexts.push(handleInText);
-    //
-    //     var handleOutText = new PointText({
-    //         content: 'handleOut',
-    //         fontSize: 12,
-    //         justification: 'center'
-    //     });
-    //     handleTexts.push(handleOutText);
-    // }
-    //
-    // // Call onMouseMove once to correctly position the text items:
-    // onMouseMove({
-    //     point: view.center + vector.rotate(-90)
-    // });
-    </script>
-    <script type="text/javascript">
-	// Only executed our code once the DOM is ready.
+	<script type="text/javascript" src="js/paper-full.min.js"></script>
+	<script type="text/javascript">
 	var path;
-	var width = 1000;
-	 var offset = width / 30;
-	 var y = 400;
-	 var vector;
-	 paper.install(window);
+    var isFirstPoint = false;
+    var isSecondPoint = false;
+    var pointA = {
+        x: 0,
+        y: 400,
+        vector: {
+            angle: 0,
+        }
+    };
+
+    var pointB = {
+        x: 400,
+        y: 400,
+        vector: {
+            angle: -180,
+            alpha: 0
+        }
+    };
+
+	// paper.install(window);
 	window.onload = function() {
 		var canvas = document.getElementById('myCanvas');
-		paper.setup(canvas);
-		vector = new Point({
-	        angle: 0,
-	        length: width / 5
-	    });
+        paper.setup(canvas);
+        paper.view.onMouseDown = function(ev) {
+            if (!isFirstPoint) {
+                isFirstPoint = true;
+                pointA.x = ev.point.x;
+                pointA.y = ev.point.y;
+            } else {
+                if (!isSecondPoint) {
+                    isSecondPoint = true;
+                    pointB.x = ev.point.x;
+                    pointB.y = ev.point.y;
+                    var b = new paper.Point(ev.point.x, ev.point.y);
+                    var a = new paper.Point(pointA.x, pointA.y);
+                    var vector = b.subtract(a);
+                    // pointA.vector.length = vector.length / 2;
+                    // pointB.vector.length = vector.length / 2;
+                    pointB.vector.length = 0;
+                    pointB.vector.distance = vector.length / 2;
+                    createPath();
+                }
+            }
+        }
 
-	    var handleTexts = [];
-	    path = new Path({
-	        segments: [
-	            [[offset, y], null, vector.rotate(-95)],
-	            [[width / 2, y], vector.rotate(-90)]
-	        ],
-	        fullySelected: true,
-	    });
-
-		view.draw();
+        paper.view.onMouseDrag = function(ev) {
+            if (!isFirstPoint || !isSecondPoint) return;
+            var a = new paper.Point(ev.point.x, ev.point.y);
+            var b = new paper.Point(pointB.x, pointB.y);
+            var v = b.subtract(a);
+            pointB.vector.length = v.length;
+            pointB.vector.angle = v.angle;
+            createPath();
+        };
 	}
 
-	function change() {
-		path.remove();
-		path = new Path({
-	        segments: [
-	            [[offset, y], null, vector.rotate(-35)],
-	            [[width / 2, y], vector.rotate(-90)]
-	        ],
-	        fullySelected: true,
-	    });
-		
-		view.draw();
-	}
+    function createPath() {
+        if (path) path.remove();
+		path = new paper.Path({
+			segments: [
+				[[pointA.x, pointA.y], new paper.Point({
+        			angle: 0,
+        			length: pointA.vector.length
+        		})],
+				[[pointB.x, pointB.y], new paper.Point({
+        			angle: pointB.vector.angle,
+        			length: pointB.vector.length
+        		})]
+			],
+			fullySelected: true,
+		});
+
+		paper.view.draw();
+    }
 </script>
+<style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0px;
+    }
+
+    #myCanvas {
+        width: 100%;
+        height: 60%;
+    }
+</style>
 </head>
 <body>
-    <canvas id="myCanvas" resize width="1000" height="500"></canvas>
-    <div>
-        <button onclick="change()">test</button>
-    </div>
+	<canvas id="myCanvas"></canvas>
 </body>
 </html>
