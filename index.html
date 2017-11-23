@@ -4,23 +4,32 @@
 	<script type="text/javascript" src="js/paper-full.min.js"></script>
 	<script type="text/javascript">
 	var path;
+    var pathHelper;
+    var pathHelper2;
     var isFirstPoint = false;
     var isSecondPoint = false;
     var pointA = {
         x: 0,
-        y: 400,
+        y: 0,
         vector: {
             angle: 0,
         }
     };
 
     var pointB = {
-        x: 400,
-        y: 400,
+        x: 0,
+        y: 0,
         vector: {
             angle: -180,
             alpha: 0
         }
+    };
+
+    var helper = {
+        x: 0,
+        y: 0,
+        angle: 0,
+        length: 0
     };
 
 	// paper.install(window);
@@ -40,8 +49,6 @@
                     var b = new paper.Point(ev.point.x, ev.point.y);
                     var a = new paper.Point(pointA.x, pointA.y);
                     var vector = b.subtract(a);
-                    // pointA.vector.length = vector.length / 2;
-                    // pointB.vector.length = vector.length / 2;
                     pointB.vector.length = 0;
                     pointB.vector.distance = vector.length / 2;
                     createPath();
@@ -56,6 +63,14 @@
             var v = b.subtract(a);
             pointB.vector.length = v.length;
             pointB.vector.angle = v.angle;
+            if (pathHelper) pathHelper.remove();
+            pathHelper = new paper.Path(b, a);
+            pathHelper.strokeColor = "red";
+
+            var t = new paper.Point(2 * b.x - a.x, 2 * b.y - a.y);
+            if (pathHelper2) pathHelper2.remove();
+            pathHelper2 = new paper.Path(b, t);
+            pathHelper2.strokeColor = "green";
             createPath();
         };
 	}
@@ -73,7 +88,8 @@
         			length: pointB.vector.length
         		})]
 			],
-			fullySelected: true,
+			fullySelected: false,
+            strokeColor: "black"
 		});
 
 		paper.view.draw();
