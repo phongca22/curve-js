@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="js/paper-full.min.js"></script>
+    <script type="text/javascript">
+    // paper.install(window);
+    var line;
+    var added = [];
+    window.onload = function() {
+        var canvas = document.getElementById('myCanvas');
+        paper.setup(canvas);
+        var p1 = new paper.Path.Circle({
+            center: new paper.Point(80, 50),
+            radius: 50
+        });
+
+        var p2 = new paper.Path.Circle({
+            center: new paper.Point(120, 60),
+            radius: 50
+        });
+
+        var p3 = new paper.Path.Circle({
+            center: new paper.Point(110, 100),
+            radius: 50
+        });
+
+        p1.strokeColor = "black";
+        p2.strokeColor = "black";
+        p3.strokeColor = "black";
+
+        var t2 = p1.intersect(p2);
+        var t3 = p1.subtract(p2);
+        var t6 = p2.subtract(p1);
+
+        var t4 = p1.exclude(p2);
+        t4.position = new paper.Point(200, 350);
+        t4.fillColor = "grey";
+
+        var t5 = p1.divide(p2);
+        t5.position = new paper.Point(200, 450);
+        t5.fillColor = "grey";
+
+
+        paper.view.onMouseMove = function(ev) {
+            t2.fillColor = t2.contains(ev.point) ? "grey" : "white";
+            t3.fillColor = t3.contains(ev.point) ? "grey" : "white";
+            t6.fillColor = t6.contains(ev.point) ? "grey" : "white";
+        };
+
+        paper.view.onMouseDown = function(ev) {
+            if (line) line.remove();
+            line = new paper.Path();
+            line.strokeColor = '#00000';
+            line.add(ev.point);
+        };
+
+        paper.view.onMouseDrag = function(ev) {
+            line.add(ev.point);
+            setSelectedPath(t2, ev);
+            setSelectedPath(t3, ev);
+            setSelectedPath(t6, ev);
+        };
+
+        paper.view.onMouseUp = function() {
+            // var t = p1.unite(p2);
+            // t.fillColor = "white"
+            // t.bringToFront();
+            if (line) line.remove();
+        };
+    }
+
+    function setSelectedPath(p, ev) {
+        if (p.contains(ev.point)) {
+            p.fillColor = "grey";
+        }
+    }
+</script>
+<style>
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+}
+
+#myCanvas {
+    width: 100%;
+    height: 60%;
+}
+</style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+</body>
+</html>
