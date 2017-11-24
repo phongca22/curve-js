@@ -8,7 +8,7 @@ window.onload = function() {
     createCircle(80, 50, 50);
     createCircle(120, 60, 50);
     createCircle(110, 100, 50);
-    createCircle(120, 80, 50);
+    // createCircle(120, 80, 50);
 
     dectectAll();
 
@@ -65,12 +65,14 @@ function createCircle(x, y, r) {
 }
 
 function dectectAll() {
-    detectIntersectOfAll();
-    detectSubtractOneWithAllUnite();
-    detectIntersectOneWithAllUnite();
+    detect01();
+    detect02();
+    detect03();
 }
 
-function detectIntersectOfAll() {
+
+//get intersect of all
+function detect01() {
     var t = null;
     for (var i = 0; i < circles.length; i++) {
         if (!t) {
@@ -84,7 +86,8 @@ function detectIntersectOfAll() {
     t.fillColor = getRandomColor();
 }
 
-function detectSubtractOneWithAllUnite() {
+//every shape subtract with all unite remaining
+function detect02() {
     for (var i = 0; i < circles.length; i++) {
         var t = circles[i];
         var list = circles.slice(0);;
@@ -105,6 +108,5 @@ function detectSubtractOneWithAllUnite() {
     }
 }
 
-function detectIntersectOneWithAllUnite() {
-
+function detect03() {
 }
