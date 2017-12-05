@@ -1,6 +1,9 @@
+var currentPath;
+var allPaths = [];
 var path;
 var pathHelper;
 var pathHelper2;
+var firstPointHelper;
 var isFirstPoint = false;
 var isSecondPoint = false;
 var pointA = {
@@ -8,6 +11,7 @@ var pointA = {
     y: 0,
     vector: {
         angle: 0,
+        alpha: 0
     }
 };
 
@@ -15,7 +19,7 @@ var pointB = {
     x: 0,
     y: 0,
     vector: {
-        angle: -180,
+        angle: 0,
         alpha: 0
     }
 };
@@ -31,22 +35,44 @@ var helper = {
 window.onload = function() {
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
+
     paper.view.onMouseDown = function(ev) {
+        var ex = ev.point.x;
+        var ey = ev.point.y;
         if (!isFirstPoint) {
             isFirstPoint = true;
-            pointA.x = ev.point.x;
-            pointA.y = ev.point.y;
+            pointA.x = ex;
+            pointA.y = ey;
+            firstPointHelper = new paper.Path.Circle({
+                center: new paper.Point(ex, ey),
+                radius: 3,
+                fillColor: "green"
+            });
+
+            firstPointHelper.onClick = function(){
+                currentPath.closed = true;
+                isFirstPoint = false;
+                isSecondPoint = false;
+                allPaths.push(currentPath);
+                currentPath = null;
+            };
         } else {
             if (!isSecondPoint) {
+                if (currentPath) {
+                    pointA = JSON.parse(JSON.stringify(pointB));
+                    pointA.vector.angle = 0;
+                    pointB.vector.length = 0;
+                }
+
                 isSecondPoint = true;
-                pointB.x = ev.point.x;
-                pointB.y = ev.point.y;
-                var b = new paper.Point(ev.point.x, ev.point.y);
+                pointB.x = ex;
+                pointB.y = ey;
+                var b = new paper.Point(ex, ey);
                 var a = new paper.Point(pointA.x, pointA.y);
                 var vector = b.subtract(a);
                 pointB.vector.length = 0;
-                pointB.vector.distance = vector.length / 2;
-                createPath();
+                pointB.vector.distance = 0;
+                drawLine();
             }
         }
     }
@@ -66,13 +92,35 @@ window.onload = function() {
         if (pathHelper2) pathHelper2.remove();
         pathHelper2 = new paper.Path(b, t);
         pathHelper2.strokeColor = "green";
-        createPath();
+        drawLine();
+    };
+
+    paper.view.onMouseUp = function(ev) {
+        if (!isSecondPoint)  return;
+        if (pathHelper) pathHelper.remove();
+        if (pathHelper2) pathHelper2.remove();
+
+        if (!currentPath) {
+            currentPath = createPath();
+        } else {
+            currentPath.addSegments([[[pointB.x, pointB.y], new paper.Point({
+                angle: pointB.vector.angle,
+                length: pointB.vector.length
+            })]]);
+        }
+
+        isSecondPoint = false;
     };
 }
 
-function createPath() {
+function drawLine() {
     if (path) path.remove();
-    path = new paper.Path({
+    path = createPath();
+    // paper.view.draw();
+}
+
+function createPath() {
+    return new paper.Path({
         segments: [
             [[pointA.x, pointA.y], new paper.Point({
                 angle: 0,
@@ -86,6 +134,4 @@ function createPath() {
         fullySelected: false,
         strokeColor: "black"
     });
-
-    paper.view.draw();
 }
