@@ -135,3 +135,8 @@ function createPath() {
         strokeColor: "black"
     });
 }
+
+function download() {
+    var a = paper.project.exportSVG();
+    console.log(a)
+}

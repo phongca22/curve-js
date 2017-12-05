@@ -9,6 +9,7 @@ window.onload = function() {
     createCircle(120, 60, 50);
     createCircle(110, 100, 50);
     // createCircle(120, 80, 50);
+    // createCircle(122, 85, 50);
 
     dectectAll();
 
@@ -19,17 +20,17 @@ window.onload = function() {
     };
 
     paper.view.onMouseDown = function(ev) {
-        if (line) line.remove();
-        line = new paper.Path();
-        line.strokeColor = '#00000';
-        line.add(ev.point);
+        // if (line) line.remove();
+        // line = new paper.Path();
+        // line.strokeColor = '#00000';
+        // line.add(ev.point);
     };
 
     paper.view.onMouseDrag = function(ev) {
-        line.add(ev.point);
-        setSelectedPath(t2, ev);
-        setSelectedPath(t3, ev);
-        setSelectedPath(t6, ev);
+        // line.add(ev.point);
+        // setSelectedPath(t2, ev);
+        // setSelectedPath(t3, ev);
+        // setSelectedPath(t6, ev);
     };
 
     paper.view.onMouseUp = function() {
@@ -58,9 +59,10 @@ function getRandomColor() {
 function createCircle(x, y, r) {
     var t = new paper.Path.Circle({
         center: new paper.Point(x, y),
-        radius: r
+        radius: r,
+        strokeColor: "black"
     });
-    t.strokeColor = "black";
+
     circles.push(t);
 }
 
@@ -83,7 +85,8 @@ function detect01() {
         t = t.intersect(circles[i]);
     }
 
-    t.fillColor = getRandomColor();
+    t.fillColor = "white";
+    addHoverEvent(t);
 }
 
 //every shape subtract with all unite remaining
@@ -104,9 +107,32 @@ function detect02() {
 
         // u.fillColor = getRandomColor();
         t = t.subtract(u);
-        t.fillColor = getRandomColor();
+        t.fillColor = "white";
+        addHoverEvent(t);
     }
 }
 
 function detect03() {
+    // var x = circles[0].intersect(circles[1]).subtract(circles[2].unite(circles[3]));
+    // x.fillColor = "white";
+    // addHoverEvent(x)
+    // return;
+    for (var i = 0; i < circles.length; i++) {
+        var next = i + 1 >= circles.length ? 0 : i + 1;
+        var remain = next + 1 >= circles.length  ? 0 : next + 1;
+        var x = circles[i].intersect(circles[next]).subtract(circles[remain]);
+        x.fillColor = "white";
+        addHoverEvent(x);
+    }
+}
+
+function addHoverEvent(a) {
+    a.onMouseEnter = function(ev){
+        a.fillColor = getRandomColor();
+        console.log(ev)
+    };
+
+    a.onMouseLeave = function(){
+        a.fillColor = "white";
+    };
 }
