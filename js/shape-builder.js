@@ -1,6 +1,9 @@
 // paper.install(window);
 var line;
-var circles = [];
+var shapes = [];
+var selectedShape = null;
+var cacheShapes = [];
+paper.install(window);
 window.onload = function() {
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
@@ -8,43 +11,73 @@ window.onload = function() {
     createCircle(80, 50, 50);
     createCircle(120, 60, 50);
     createCircle(110, 100, 50);
-    // createCircle(120, 80, 50);
+    createCircle(120, 80, 50);
     // createCircle(122, 85, 50);
 
-    dectectAll();
+    view.onMouseMove = function(ev) {
+        var intersectData = getIntersectData(ev.point);
+        if (!intersectData.area) {
+            if (selectedShape) {
+                selectedShape.remove();
+            }
 
-    paper.view.onMouseMove = function(ev) {
-        // t2.fillColor = t2.contains(ev.point) ? "grey" : "white";
-        // t3.fillColor = t3.contains(ev.point) ? "grey" : "white";
-        // t6.fillColor = t6.contains(ev.point) ? "grey" : "white";
+            selectedShape = null;
+            console.log("empty")
+            return;
+        }
+
+        if (selectedShape && intersectData.id === selectedShape._sandentId) {
+            console.log("skip")
+            return;
+        }
+
+        if (intersectData.remain.length === 0 && intersectData.area) {
+            if (selectedShape) {
+                selectedShape.remove();
+                console.log("remove shape");
+            }
+
+            selectedShape = intersectData.area;
+            selectedShape.fillColor = "#009688";
+            return;
+        }
+
+        var uniteData = getUniteData(intersectData.remain);
+        if (!uniteData) return;
+
+        var shape = intersectData.area.subtract(uniteData);
+        if (selectedShape) {
+            selectedShape.remove();
+            console.log("remove shape");
+        }
+
+        selectedShape = shape;
+        selectedShape.fillColor = "#009688";
+        console.log("select new shape")
+        selectedShape._sandentId = intersectData.id;
+        uniteData.removeOnMove();
     };
 
-    paper.view.onMouseDown = function(ev) {
+    view.onMouseDown = function(ev) {
         // if (line) line.remove();
         // line = new paper.Path();
         // line.strokeColor = '#00000';
         // line.add(ev.point);
     };
 
-    paper.view.onMouseDrag = function(ev) {
+    view.onMouseDrag = function(ev) {
         // line.add(ev.point);
         // setSelectedPath(t2, ev);
         // setSelectedPath(t3, ev);
         // setSelectedPath(t6, ev);
     };
 
-    paper.view.onMouseUp = function() {
+    view.onMouseUp = function() {
         // var t = p1.unite(p2);
         // t.fillColor = "white"
         // t.bringToFront();
         if (line) line.remove();
     };
-}
-
-function setSelectedPath(p, ev) {
-    if (p.contains(ev.point)) {
-        p.fillColor = "grey";
-    }
 }
 
 function getRandomColor() {
@@ -56,6 +89,61 @@ function getRandomColor() {
     return color;
 }
 
+function getIntersectData(point) {
+    var area = null;
+    var remain = [];
+    var id = [];
+    var list = cloneShapes();
+    for (var i = 0; i < list.length; i++) {
+        var shape = list[i];
+        if (shape.contains(point)) {
+            if (!area) {
+                area = shape;
+            } else {
+                area = area.intersect(shape);
+                area.removeOnMove();
+            }
+
+            id.push(i);
+        } else {
+            remain.push(shape);
+        }
+    }
+
+    return {
+        area: area,
+        remain: remain,
+        id: id.join("_"),
+        shapes: list
+    };
+}
+
+function cloneShapes() {
+    var list = [];
+    for (var i = 0; i < shapes.length; i++) {
+        var t = shapes[i].clone();
+        t.removeOnMove();
+        list.push(t);
+    }
+
+    return list;
+}
+
+function getUniteData(remain) {
+    var area = null;
+    for (var i = 0; i < remain.length; i++) {
+        if (!area) {
+            area = remain[i];
+        } else {
+            area = area.unite(remain[i]);
+            area.removeOnMove();
+        }
+
+    }
+
+    return area;
+}
+
 function createCircle(x, y, r) {
     var t = new paper.Path.Circle({
         center: new paper.Point(x, y),
@@ -63,76 +151,5 @@ function createCircle(x, y, r) {
         strokeColor: "black"
     });
 
-    circles.push(t);
-}
-
-function dectectAll() {
-    detect01();
-    detect02();
-    detect03();
-}
-
-
-//get intersect of all
-function detect01() {
-    var t = null;
-    for (var i = 0; i < circles.length; i++) {
-        if (!t) {
-            t = circles[0];
-            continue;
-        }
-
-        t = t.intersect(circles[i]);
-    }
-
-    t.fillColor = "white";
-    addHoverEvent(t);
-}
-
-//every shape subtract with all unite remaining
-function detect02() {
-    for (var i = 0; i < circles.length; i++) {
-        var t = circles[i];
-        var list = circles.slice(0);;
-        list.splice(i, 1);
-        var u = null;
-        for (var k = 0; k < list.length; k++) {
-            if (!u) {
-                u = list[k];
-                continue;
-            }
-
-            u = u.unite(list[k]);
-        }
-
-        // u.fillColor = getRandomColor();
-        t = t.subtract(u);
-        t.fillColor = "white";
-        addHoverEvent(t);
-    }
-}
-
-function detect03() {
-    // var x = circles[0].intersect(circles[1]).subtract(circles[2].unite(circles[3]));
-    // x.fillColor = "white";
-    // addHoverEvent(x)
-    // return;
-    for (var i = 0; i < circles.length; i++) {
-        var next = i + 1 >= circles.length ? 0 : i + 1;
-        var remain = next + 1 >= circles.length  ? 0 : next + 1;
-        var x = circles[i].intersect(circles[next]).subtract(circles[remain]);
-        x.fillColor = "white";
-        addHoverEvent(x);
-    }
-}
-
-function addHoverEvent(a) {
-    a.onMouseEnter = function(ev){
-        a.fillColor = getRandomColor();
-        console.log(ev)
-    };
-
-    a.onMouseLeave = function(){
-        a.fillColor = "white";
-    };
+    shapes.push(t);
 }
