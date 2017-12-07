@@ -61,7 +61,7 @@ function getRandomColor() {
     for (var i = 0; i < 6; i++) {
         color += letters[Math.floor(Math.random() * 16)];
     }
-    
+
     return color;
 }
 
@@ -187,7 +187,8 @@ function detectShape(ev) {
     }
 
     selectedShape = shape;
-    selectedShape.fillColor = "#009688";
+    selectedShape.fillColor = "#607D8B";
+    selectedShape.strokeColor = "red";
     selectedShape._sandentId = intersectData.id;
 
     clearShape(uniteData);
@@ -202,26 +203,31 @@ function detectShape(ev) {
 }
 
 function createLinkedShape() {
-    var a = linkedShape[0];
-    a.translate(200, 100);
-    var b = linkedShape[1];
-    b.translate(200, 100);
-
-    var c = a.unite(b);
-    c.fillColor = getRandomColor();
-    c.translate(new Point(100, 100));
-
-    return;
+    // var a = linkedShape[0];
+    // a.translate(200, 100);
+    // var b = linkedShape[1];
+    // b.translate(200, 100);
+    //
+    // var c = a.unite(b);
+    // c.fillColor = getRandomColor();
+    // c.translate(new Point(100, 100));
+    //
+    // return;
 
     var t = linkedShape[0];
+    var list = []
     for (var i = 1; i < linkedShape.length; i++) {
+        linkedShape[i].fillColor = "white";
         t = t.unite(linkedShape[i]);
+        list.push(t);
     }
 
     t.fillColor = "white";
-    t.selected = true;
-    console.log("link shape", t);
+    t.strokeColor = "black";
+    t.bringToFront();
 
+    list.pop();
+    clearShape(list);
     // clearLinkedShape();
 }
 
