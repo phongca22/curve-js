@@ -4,6 +4,10 @@ var shapes = [];
 var selectedShape = null;
 var cacheShapes = [];
 var linkedShape = [];
+var test = false;
+var ids = [];
+var temp = [];
+
 paper.install(window);
 window.onload = function() {
     var canvas = document.getElementById('myCanvas');
@@ -33,6 +37,7 @@ window.onload = function() {
     };
 
     view.onMouseDrag = function(ev) {
+        if (!line) return;
         line.add(ev.point);
         detectShape(ev);
     };
@@ -56,6 +61,7 @@ function getRandomColor() {
     for (var i = 0; i < 6; i++) {
         color += letters[Math.floor(Math.random() * 16)];
     }
+    
     return color;
 }
 
@@ -67,11 +73,12 @@ function getIntersectData(point) {
     for (var i = 0; i < list.length; i++) {
         var shape = list[i];
         if (shape.contains(point)) {
+            test = true;
             if (!area) {
                 area = shape;
             } else {
                 area = area.intersect(shape);
-                area.removeOnMove();
+                temp.push(area);
             }
 
             id.push(i);
@@ -92,7 +99,6 @@ function cloneShapes() {
     var list = [];
     for (var i = 0; i < shapes.length; i++) {
         var t = shapes[i].clone();
-        t.removeOnMove();
         list.push(t);
     }
 
@@ -104,25 +110,24 @@ function getUniteData(remain) {
     for (var i = 0; i < remain.length; i++) {
         if (!area) {
             area = remain[i];
-            area.removeOnMove();
         } else {
             area = area.unite(remain[i]);
-            area.removeOnMove();
+            temp.push(area);
         }
-
     }
 
     return area;
 }
 
 function createCircle(x, y, r) {
-    var t = new paper.Path.Circle({
-        center: new paper.Point(x, y),
+    var t = new Path.Circle({
+        center: new Point(x, y),
         radius: r,
         strokeColor: "black"
     });
 
     shapes.push(t);
+    ids.push(t.id);
 }
 
 function detectShape(ev) {
@@ -133,11 +138,18 @@ function detectShape(ev) {
         }
 
         selectedShape = null;
+        clearShape(intersectData.remain);
+        clearShape(intersectData.shapes);
+        console.log("outside")
         return;
     }
 
     if (selectedShape && intersectData.id === selectedShape._sandentId) {
-        addLinkedShape();
+        // addLinkedShape();
+        clearShape(intersectData.area);
+        clearShape(intersectData.remain);
+        clearShape(intersectData.shapes);
+        console.log("inside shape")
         return;
     }
 
@@ -148,17 +160,27 @@ function detectShape(ev) {
 
         selectedShape = intersectData.area;
         selectedShape.fillColor = "#009688";
+
+        clearShape(intersectData.area);
+        clearShape(intersectData.remain);
+        clearShape(intersectData.shapes);
+        console.log("all intersect")
         return;
     }
 
     var uniteData = getUniteData(intersectData.remain);
-    if (!uniteData) return;
+
+    if (!uniteData) {
+        clearShape(intersectData.area);
+        clearShape(intersectData.remain);
+        clearShape(intersectData.shapes);
+        return;
+    }
 
     var shape = intersectData.area.subtract(uniteData);
     if (selectedShape) {
         if (line) {
             linkedShape.push(selectedShape);
-            console.log("push");
         } else {
             selectedShape.remove();
         }
@@ -167,30 +189,50 @@ function detectShape(ev) {
     selectedShape = shape;
     selectedShape.fillColor = "#009688";
     selectedShape._sandentId = intersectData.id;
-    uniteData.removeOnMove();
+
+    clearShape(uniteData);
+    clearShape(intersectData.area);
+    clearShape(intersectData.remain);
+    clearShape(intersectData.shapes);
+    clearShape(temp);
+
+    if (line) {
+        linkedShape.push(selectedShape);
+    }
 }
 
 function createLinkedShape() {
-    var t = null;
-    for (var i = 0; i < linkedShape.length; i++) {
-        var s = linkedShape[i];
-        s.fillColor = "white";
-        if (!t) {
-            t = s;
-        } else {
-            t = t.unite(s);
-        }
+    var a = linkedShape[0];
+    a.translate(200, 100);
+    var b = linkedShape[1];
+    b.translate(200, 100);
 
-        t.fillColor = "green";
-        t.translate(new Point(300, 0));
+    var c = a.unite(b);
+    c.fillColor = getRandomColor();
+    c.translate(new Point(100, 100));
+
+    return;
+
+    var t = linkedShape[0];
+    for (var i = 1; i < linkedShape.length; i++) {
+        t = t.unite(linkedShape[i]);
     }
+
+    t.fillColor = "white";
+    t.selected = true;
+    console.log("link shape", t);
 
     // clearLinkedShape();
 }
 
-function clearLinkedShape() {
-    for (var i = 0; i < linkedShape.length; i++) {
-        linkedShape[i].remove();
+function clearShape(list) {
+    if (list.constructor != Array) {
+        list.remove();
+        return;
+    }
+
+    for (var i = 0; i < list.length; i++) {
+        list[i].remove();
     }
 }
 
