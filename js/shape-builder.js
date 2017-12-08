@@ -4,9 +4,10 @@ var shapes = [];
 var selectedShape = null;
 var cacheShapes = [];
 var linkedShape = [];
-var test = false;
-var ids = [];
 var temp = [];
+var linkedTemp = [];
+
+var clones = [];
 
 paper.install(window);
 window.onload = function() {
@@ -27,6 +28,10 @@ window.onload = function() {
 
     view.onMouseMove = function(ev) {
         detectShape(ev);
+        var layer = project.layers[0];
+        var children = layer.children;
+        console.log("child: " + children.length);
+        console.log("linked: " + linkedShape.length);
     };
 
     view.onMouseDown = function(ev) {
@@ -40,6 +45,9 @@ window.onload = function() {
         if (!line) return;
         line.add(ev.point);
         detectShape(ev);
+        var layer = project.layers[0];
+        var children = layer.children;
+        console.log("child: " + children.length);
     };
 
     view.onMouseUp = function() {
@@ -73,7 +81,6 @@ function getIntersectData(point) {
     for (var i = 0; i < list.length; i++) {
         var shape = list[i];
         if (shape.contains(point)) {
-            test = true;
             if (!area) {
                 area = shape;
             } else {
@@ -99,6 +106,8 @@ function cloneShapes() {
     var list = [];
     for (var i = 0; i < shapes.length; i++) {
         var t = shapes[i].clone();
+        t.strokColor = "white";
+        t.fillColor = "white";
         list.push(t);
     }
 
@@ -127,7 +136,6 @@ function createCircle(x, y, r) {
     });
 
     shapes.push(t);
-    ids.push(t.id);
 }
 
 function detectShape(ev) {
@@ -140,6 +148,7 @@ function detectShape(ev) {
         selectedShape = null;
         clearShape(intersectData.remain);
         clearShape(intersectData.shapes);
+        clearShape(temp);
         console.log("outside")
         return;
     }
@@ -149,24 +158,25 @@ function detectShape(ev) {
         clearShape(intersectData.area);
         clearShape(intersectData.remain);
         clearShape(intersectData.shapes);
+        clearShape(temp);
         console.log("inside shape")
         return;
     }
 
-    if (intersectData.remain.length === 0 && intersectData.area) {
-        if (selectedShape) {
-            selectedShape.remove();
-        }
-
-        selectedShape = intersectData.area;
-        selectedShape.fillColor = "#009688";
-
-        clearShape(intersectData.area);
-        clearShape(intersectData.remain);
-        clearShape(intersectData.shapes);
-        console.log("all intersect")
-        return;
-    }
+    // if (intersectData.remain.length === 0 && intersectData.area) {
+    //     if (selectedShape) {
+    //         selectedShape.remove();
+    //     }
+    //
+    //     selectedShape = intersectData.area;
+    //     selectedShape.fillColor = "#009688";
+    //
+    //     clearShape(intersectData.area);
+    //     clearShape(intersectData.remain);
+    //     clearShape(intersectData.shapes);
+    //     console.log("all intersect")
+    //     return;
+    // }
 
     var uniteData = getUniteData(intersectData.remain);
 
@@ -187,7 +197,7 @@ function detectShape(ev) {
     }
 
     selectedShape = shape;
-    selectedShape.fillColor = "#607D8B";
+    selectedShape.fillColor = "#ababab";
     selectedShape.strokeColor = "red";
     selectedShape._sandentId = intersectData.id;
 
@@ -203,6 +213,7 @@ function detectShape(ev) {
 }
 
 function createLinkedShape() {
+    if (linkedShape.length <= 1) return;
     // var a = linkedShape[0];
     // a.translate(200, 100);
     // var b = linkedShape[1];
@@ -214,25 +225,35 @@ function createLinkedShape() {
     //
     // return;
 
-    var t = linkedShape[0];
-    var list = []
-    for (var i = 1; i < linkedShape.length; i++) {
-        linkedShape[i].fillColor = "white";
-        t = t.unite(linkedShape[i]);
-        list.push(t);
-    }
-
+    var t1 = uniteLinkedShape();
+    var t2 = uniteLinkedShape();
+    var t = t1.unite(t2);
     t.fillColor = "white";
     t.strokeColor = "black";
     t.bringToFront();
 
-    list.pop();
-    clearShape(list);
-    // clearLinkedShape();
+    console.log("linked shape :" + linkedShape.length);
+    // list.pop();
+    // clearShape(linkedShape);
+    clearShape(linkedTemp);
+}
+
+function uniteLinkedShape() {
+    var t = null;
+    for (var i = 0; i < linkedShape.length; i++) {
+        if (!t) {
+            t = linkedShape[i];
+        } else {
+            t = t.unite(linkedShape[i]);
+            linkedTemp.push(t);
+        }
+    }
+
+    return t;
 }
 
 function clearShape(list) {
-    if (list.constructor != Array) {
+    if (list.constructor !== Array) {
         list.remove();
         return;
     }
@@ -240,6 +261,8 @@ function clearShape(list) {
     for (var i = 0; i < list.length; i++) {
         list[i].remove();
     }
+
+    list = [];
 }
 
 function addLinkedShape() {
