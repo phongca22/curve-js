@@ -51,9 +51,6 @@ window.onload = function() {
     };
 
     view.onMouseUp = function() {
-        // var t = p1.unite(p2);
-        // t.fillColor = "white"
-        // t.bringToFront();
         if (line) {
             line.remove();
             line = null;
@@ -154,7 +151,6 @@ function detectShape(ev) {
     }
 
     if (selectedShape && intersectData.id === selectedShape._sandentId) {
-        // addLinkedShape();
         clearShape(intersectData.area);
         clearShape(intersectData.remain);
         clearShape(intersectData.shapes);
@@ -162,21 +158,6 @@ function detectShape(ev) {
         console.log("inside shape")
         return;
     }
-
-    // if (intersectData.remain.length === 0 && intersectData.area) {
-    //     if (selectedShape) {
-    //         selectedShape.remove();
-    //     }
-    //
-    //     selectedShape = intersectData.area;
-    //     selectedShape.fillColor = "#009688";
-    //
-    //     clearShape(intersectData.area);
-    //     clearShape(intersectData.remain);
-    //     clearShape(intersectData.shapes);
-    //     console.log("all intersect")
-    //     return;
-    // }
 
     var uniteData = getUniteData(intersectData.remain);
 
@@ -190,7 +171,7 @@ function detectShape(ev) {
     var shape = intersectData.area.subtract(uniteData);
     if (selectedShape) {
         if (line) {
-            linkedShape.push(selectedShape);
+            addLinkedShape(selectedShape, ev.point);
         } else {
             selectedShape.remove();
         }
@@ -208,22 +189,12 @@ function detectShape(ev) {
     clearShape(temp);
 
     if (line) {
-        linkedShape.push(selectedShape);
+        addLinkedShape(selectedShape, ev.point);
     }
 }
 
 function createLinkedShape() {
     if (linkedShape.length <= 1) return;
-    // var a = linkedShape[0];
-    // a.translate(200, 100);
-    // var b = linkedShape[1];
-    // b.translate(200, 100);
-    //
-    // var c = a.unite(b);
-    // c.fillColor = getRandomColor();
-    // c.translate(new Point(100, 100));
-    //
-    // return;
 
     var t1 = uniteLinkedShape();
     var t2 = uniteLinkedShape();
@@ -232,10 +203,8 @@ function createLinkedShape() {
     t.strokeColor = "black";
     t.bringToFront();
 
-    console.log("linked shape :" + linkedShape.length);
-    // list.pop();
-    // clearShape(linkedShape);
     clearShape(linkedTemp);
+    linkedShape = [t];
 }
 
 function uniteLinkedShape() {
@@ -265,13 +234,12 @@ function clearShape(list) {
     list = [];
 }
 
-function addLinkedShape() {
-    // if (!line) return;
-    // var list = [];
-    // for (var i = 0; i < linkedShape.length; i++) {
-    //     if (linkedShape[i]._sandentId == selectedShape._sandentId) continue;
-    //     list.push(selectedShape);
-    // }
-    //
-    // linkedShape = list;
+function addLinkedShape(shape, point) {
+    for (var i = 0; i < linkedShape.length; i++) {
+        if (linkedShape[i].contains(point)) {
+            return;
+        }
+    }
+
+    linkedShape.push(shape);
 }
