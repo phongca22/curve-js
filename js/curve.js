@@ -55,8 +55,8 @@ window.onload = function() {
             isFirstPoint = true;
             pointA.x = ex;
             pointA.y = ey;
-            firstPointHelper = new paper.Path.Circle({
-                center: new paper.Point(ex, ey),
+            firstPointHelper = new Path.Circle({
+                center: new Point(ex, ey),
                 radius: 3,
                 fillColor: "green"
             });
@@ -78,8 +78,8 @@ window.onload = function() {
                 isSecondPoint = true;
                 pointB.x = ex;
                 pointB.y = ey;
-                var b = new paper.Point(ex, ey);
-                var a = new paper.Point(pointA.x, pointA.y);
+                var b = new Point(ex, ey);
+                var a = new Point(pointA.x, pointA.y);
                 var vector = b.subtract(a);
                 pointB.vector.length = 0;
                 pointB.vector.distance = 0;
@@ -95,18 +95,18 @@ window.onload = function() {
         }
 
         if (!isFirstPoint || !isSecondPoint) return;
-        var a = new paper.Point(ev.point.x, ev.point.y);
-        var b = new paper.Point(pointB.x, pointB.y);
+        var a = new Point(ev.point.x, ev.point.y);
+        var b = new Point(pointB.x, pointB.y);
         var v = b.subtract(a);
         pointB.vector.length = v.length;
         pointB.vector.angle = v.angle;
         if (pathHelper) pathHelper.remove();
-        pathHelper = new paper.Path(b, a);
+        pathHelper = new Path(b, a);
         pathHelper.strokeColor = "red";
 
-        var t = new paper.Point(2 * b.x - a.x, 2 * b.y - a.y);
+        var t = new Point(2 * b.x - a.x, 2 * b.y - a.y);
         if (pathHelper2) pathHelper2.remove();
-        pathHelper2 = new paper.Path(b, t);
+        pathHelper2 = new Path(b, t);
         pathHelper2.strokeColor = "green";
         drawLine();
     };
@@ -126,7 +126,7 @@ window.onload = function() {
         if (!currentPath) {
             currentPath = createPath();
         } else {
-            currentPath.addSegments([[[pointB.x, pointB.y], new paper.Point({
+            currentPath.addSegments([[[pointB.x, pointB.y], new Point({
                 angle: pointB.vector.angle,
                 length: pointB.vector.length
             })]]);
@@ -143,13 +143,13 @@ function drawLine() {
 }
 
 function createPath() {
-    return new paper.Path({
+    return new Path({
         segments: [
-            [[pointA.x, pointA.y], new paper.Point({
+            [[pointA.x, pointA.y], new Point({
                 angle: 0,
                 length: pointA.vector.length
             })],
-            [[pointB.x, pointB.y], new paper.Point({
+            [[pointB.x, pointB.y], new Point({
                 angle: pointB.vector.angle,
                 length: pointB.vector.length
             })]
