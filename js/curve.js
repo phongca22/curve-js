@@ -6,6 +6,8 @@ var pathHelper2;
 var firstPointHelper;
 var isFirstPoint = false;
 var isSecondPoint = false;
+var smoothLine;
+var createdPath = false;
 var pointA = {
     x: 0,
     y: 0,
@@ -31,7 +33,7 @@ var helper = {
     length: 0
 };
 
-// paper.install(window);
+paper.install(window);
 window.onload = function() {
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
@@ -39,6 +41,16 @@ window.onload = function() {
     paper.view.onMouseDown = function(ev) {
         var ex = ev.point.x;
         var ey = ev.point.y;
+        if (createdPath) {
+            if (!smoothLine) {
+                smoothLine = new Path();
+                smoothLine.strokeColor = "black";
+                smoothLine.add(ev.point);
+            }
+
+            return;
+        }
+
         if (!isFirstPoint) {
             isFirstPoint = true;
             pointA.x = ex;
@@ -53,8 +65,7 @@ window.onload = function() {
                 currentPath.closed = true;
                 isFirstPoint = false;
                 isSecondPoint = false;
-                allPaths.push(currentPath);
-                currentPath = null;
+                createdPath = true;
             };
         } else {
             if (!isSecondPoint) {
@@ -78,6 +89,11 @@ window.onload = function() {
     }
 
     paper.view.onMouseDrag = function(ev) {
+        if (createdPath) {
+            smoothLine.add(ev.point);
+            return;
+        }
+
         if (!isFirstPoint || !isSecondPoint) return;
         var a = new paper.Point(ev.point.x, ev.point.y);
         var b = new paper.Point(pointB.x, pointB.y);
@@ -96,6 +112,13 @@ window.onload = function() {
     };
 
     paper.view.onMouseUp = function(ev) {
+        if (createdPath) {
+            smoothPath();
+            smoothLine.remove();
+            smoothLine = null;
+            return;
+        }
+
         if (!isSecondPoint)  return;
         if (pathHelper) pathHelper.remove();
         if (pathHelper2) pathHelper2.remove();
@@ -138,5 +161,49 @@ function createPath() {
 
 function download() {
     var a = paper.project.exportSVG();
-    console.log(a)
+}
+
+function smoothPath() {
+    var points = currentPath.getIntersections(smoothLine);
+    var segmentIndex = getSegmentIndexByPoint(points);
+    if (segmentIndex.length < 2) return;
+    currentPath.smooth({
+        type: "continuous",
+        from: segmentIndex[0],
+        to: segmentIndex[segmentIndex.length - 1] + 1
+    });
+}
+
+function getSegmentIndexByPoint(points) {
+    var list = currentPath.segments;
+    var segmentIndex = [];
+    for (var i = 0; i < list.length; i++) {
+        var x = list[i];
+        var y = list[i + 1];
+        if (y) {
+            var z = new Path({
+                segments: [x, y],
+            });
+
+            if (isContains(z, points)) {
+                if (segmentIndex.indexOf(i) == -1) {
+                    segmentIndex.push(i);
+                }
+            }
+
+            z.remove();
+        }
+    }
+
+    return segmentIndex;
+}
+
+function isContains(p, points) {
+    for (var i = 0; i < points.length; i++) {
+        if (p.contains(points[i].point)) {
+            return true;
+        }
+    }
+
+    return false;
 }
