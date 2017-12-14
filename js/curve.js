@@ -134,12 +134,31 @@ window.onload = function() {
 
         isSecondPoint = false;
     };
+
+    paper.view.onKeyDown = function() {
+        if (Key.isDown("enter")) {
+            var s = project.exportSVG({ asString: true });
+            // var a = document.createElement("a");
+            // a.href = 'data:image/svg+xml;base64,' + btoa(s);
+            // a.click();
+            // a.remove();
+            download(s, "test.svg", "image/svg+xml");
+        }
+    };
+}
+
+function download(content, filename, contentType) {
+    if (!contentType) contentType = 'application/octet-stream';
+    var a = document.createElement('a');
+    var blob = new Blob([content], {'type': contentType});
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
 }
 
 function drawLine() {
     if (path) path.remove();
     path = createPath();
-    // paper.view.draw();
 }
 
 function createPath() {
@@ -157,10 +176,6 @@ function createPath() {
         fullySelected: false,
         strokeColor: "black"
     });
-}
-
-function download() {
-    var a = paper.project.exportSVG();
 }
 
 function smoothPath() {
